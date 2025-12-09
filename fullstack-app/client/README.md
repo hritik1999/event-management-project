@@ -1,73 +1,59 @@
-# React + TypeScript + Vite
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+# Event Management - Client (Frontend)
 
-Currently, two official plugins are available:
+The frontend application is built with **React** and **Vite**, focusing on performance, type safety, and a premium user experience.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🏗️ Architecture
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Folder Structure
+```
+src/
+├── components/
+│   ├── ui/           # Shadcn UI reusable components (Button, Card, Input...)
+│   └── ...           # Custom components
+├── context/
+│   └── AuthContext.tsx # Global authentication state (User, Token, Login/Logout)
+├── lib/
+│   ├── api.ts        # Axios instance with Interceptors for auto-token injection
+│   └── utils.ts      # Helper functions (Tailwind class merger)
+├── pages/
+│   ├── AdminDashboard.tsx  # Admin Analytics & Approvals
+│   ├── OrganizerDashboard.tsx # Event Creation & Management
+│   ├── HomePage.tsx        # Attendee Event Browsing
+│   └── ...
+├── App.tsx           # Main Router Configuration (React Router v6)
+└── main.tsx          # Entry point
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 🔑 Key Features & Implementation
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### 1. Authentication (`AuthContext`)
+-   Wraps the entire app to provide `user` and `token` state.
+-   Persists login state via `localStorage`.
+-   **Hook**: `useAuth()` allows any component to access current user role and logout function.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+### 2. API Communication (`lib/api.ts`)
+-   Centralized **Axios** instance.
+-   **Request Interceptor**: Automatically attaches `Authorization: Bearer <token>` to every request if a token exists.
+-   **Response Interceptor**: Handles global errors (e.g., redirect on 401).
+
+### 3. Admin Dashboard (`AdminDashboard.tsx`)
+-   **Visual Analytics**: Integrated `recharts` to display:
+    -   *Bookings Trend*: Bar Chart (Fixed height 300px).
+    -   *Events Distribution*: Pie Chart.
+    -   *Revenue Analysis*: Bar Chart by Organizer.
+-   **State Management**: Uses `useState` to store stats and `useEffect` to fetch them on mount.
+-   **Defensive Coding**: Implements strict null checks (e.g., `(stats.totalRevenue || 0).toFixed(2)`) to prevent crashes if the backend returns incomplete data.
+
+### 4. UI Library (Shadcn UI)
+-   Built on top of **Radix Primitives** and **Tailwind CSS**.
+-   Components reside in `src/components/ui/`.
+-   Used for all interactive elements: `Dialog` (Modals), `Card` (Layouts), `Table` (Data display).
+
+## 🚀 Commands
+
+| Command | Description |
+| :--- | :--- |
+| `npm install` | Install all dependencies |
+| `npm run dev` | Start local development server (Port 5173) |
+| `npm run build` | Compile TypeScript and build for production |
