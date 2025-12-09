@@ -55,39 +55,40 @@ export function RegisterPage() {
     };
 
     return (
-        <div className="flex justify-center items-center min-h-[calc(100vh-4rem)] bg-slate-50">
-            <Card className="w-full max-w-md">
-                <CardHeader>
-                    <CardTitle>Sign Up</CardTitle>
+        <div className="flex justify-center items-center min-h-screen bg-background relative overflow-hidden">
+            <div className="absolute bottom-[-20%] left-[20%] w-[500px] h-[500px] bg-secondary/10 rounded-full blur-[100px] -z-10"></div>
+            <Card className="w-full max-w-md border-border/50 bg-card/50 backdrop-blur-xl shadow-2xl">
+                <CardHeader className="text-center space-y-2">
+                    <CardTitle className="text-2xl font-bold">Create an Account</CardTitle>
+                    <p className="text-sm text-muted-foreground">Join the community to manage or discover events</p>
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="space-y-2">
                             <Label htmlFor="username">Username</Label>
-                            <Input id="username" value={formData.username} onChange={handleChange} required />
+                            <Input id="username" className="bg-background/50 border-input/50" value={formData.username} onChange={handleChange} required />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="email">Email</Label>
-                            <Input id="email" type="email" value={formData.email} onChange={handleChange} required />
+                            <Input id="email" type="email" className="bg-background/50 border-input/50" value={formData.email} onChange={handleChange} required />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="password">Password</Label>
-                            <Input id="password" type="password" value={formData.password} onChange={handleChange} required />
+                            <Input id="password" type="password" className="bg-background/50 border-input/50" value={formData.password} onChange={handleChange} required />
                         </div>
                         <div className="space-y-2">
                             <Label>Role</Label>
                             <Select onValueChange={handleRoleChange} defaultValue="ATTENDEE">
-                                <SelectTrigger>
+                                <SelectTrigger className="bg-background/50 border-input/50">
                                     <SelectValue placeholder="Select a role" />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="ATTENDEE">Attendee</SelectItem>
                                     <SelectItem value="ORGANIZER">Event Organizer</SelectItem>
-
                                 </SelectContent>
                             </Select>
                         </div>
-                        <Button type="submit" className="w-full">Register</Button>
+                        <Button type="submit" className="w-full h-11 text-base shadow-lg shadow-primary/20">Register</Button>
                     </form>
                 </CardContent>
             </Card>

@@ -15,6 +15,15 @@ export class EventController {
         }
     }
 
+    static async getOrganizerStats(req: AuthRequest, res: Response) {
+        try {
+            const stats = await eventService.getOrganizerStats(req.user.userId)
+            res.status(200).json(stats)
+        } catch (error: any) {
+            res.status(500).json({ message: error.message })
+        }
+    }
+
     static async getAllEvents(req: AuthRequest, res: Response) {
         try {
             const events = await eventService.getAllEvents(req.query)

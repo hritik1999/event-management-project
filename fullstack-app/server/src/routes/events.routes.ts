@@ -5,6 +5,9 @@ import { UserRole } from "../entities/User"
 
 const router = Router()
 
+// Specific routes first
+router.get("/stats/organizer", authenticate, authorize([UserRole.ORGANIZER]), EventController.getOrganizerStats)
+
 router.get("/", EventController.getAllEvents)
 router.get("/:id", EventController.getEventById)
 

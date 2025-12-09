@@ -1,15 +1,18 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import api from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "../components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "../components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "../components/ui/card";
+import { Badge } from "../components/ui/badge";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Textarea } from "../components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { toast } from "sonner";
-import { Plus, Calendar, MapPin, Edit } from "lucide-react";
+import { Plus, Calendar, MapPin, Edit, Ticket } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 
 interface TicketType {
     name: string;
@@ -49,6 +52,8 @@ export function OrganizerDashboard() {
         { name: "General", price: 0, quantity: 100 }
     ]);
 
+    const [searchParams] = useSearchParams();
+
     const fetchMyEvents = async () => {
         if (!user) return;
         try {
@@ -61,7 +66,10 @@ export function OrganizerDashboard() {
 
     useEffect(() => {
         fetchMyEvents();
-    }, [user]);
+        if (searchParams.get("action") === "create") {
+            openCreateDialog();
+        }
+    }, [user, searchParams]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         setFormData({ ...formData, [e.target.id]: e.target.value });
@@ -119,6 +127,29 @@ export function OrganizerDashboard() {
         setIsDialogOpen(true);
     };
 
+    const [stats, setStats] = useState<any>(null);
+
+    // ... (existing state)
+
+    const fetchStats = async () => {
+        try {
+            const { data } = await api.get("/events/stats/organizer");
+            setStats(data);
+        } catch (error) {
+            console.error("Failed to fetch stats");
+        }
+    };
+
+    useEffect(() => {
+        fetchMyEvents();
+        fetchStats();
+        if (searchParams.get("action") === "create") {
+            openCreateDialog();
+        }
+    }, [user, searchParams]);
+
+    // ... (existing handlers)
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
@@ -141,13 +172,14 @@ export function OrganizerDashboard() {
             setIsDialogOpen(false);
             resetForm();
             fetchMyEvents();
+            fetchStats(); // Refresh stats after change
         } catch (error: any) {
             toast.error(error.response?.data?.message || "Failed to save event");
         }
     };
 
     return (
-        <div className="container mx-auto py-8">
+        <div className="container mx-auto py-8 min-h-[calc(100vh-4rem)]">
             <div className="flex justify-between items-center mb-8">
                 <h1 className="text-3xl font-bold">Organizer Dashboard</h1>
 
@@ -232,35 +264,114 @@ export function OrganizerDashboard() {
                 </Dialog>
             </div>
 
+            {stats && (
+                <div className="space-y-8 mb-8">
+                    {/* Stats Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        {[
+                            { title: "Total Events", icon: Calendar, value: stats.totalEvents },
+                            { title: "Tickets Sold", icon: Ticket, value: stats.totalTicketsSold },
+                            { title: "Total Revenue", icon: null, value: `$${(stats.totalRevenue || 0).toFixed(2)}`, isMoney: true },
+                            { title: "Avg. Revenue/Event", icon: null, value: `$${(stats.totalEvents > 0 ? stats.totalRevenue / stats.totalEvents : 0).toFixed(2)}`, isMoney: true }
+                        ].map((item, index) => (
+                            <Card key={index} className="bg-card/50 backdrop-blur-sm border-border/50 hover:shadow-lg transition-all duration-300">
+                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                    <CardTitle className="text-sm font-medium text-muted-foreground">{item.title}</CardTitle>
+                                    {item.icon ? <item.icon className="h-4 w-4 text-primary" /> : <span className="text-primary font-bold">$</span>}
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="text-2xl font-bold tracking-tight">{item.value}</div>
+                                </CardContent>
+                            </Card>
+                        ))}
+                    </div>
+
+                    {/* Charts Section */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <Card className="col-span-1 border-border/50 shadow-xl shadow-primary/5">
+                            <CardHeader>
+                                <CardTitle>Sales Trend</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div style={{ width: '100%', height: 300 }}>
+                                    <ResponsiveContainer width="100%" height={300}>
+                                        <BarChart data={stats.revenueTrend || []}>
+                                            <CartesianGrid strokeDasharray="3 3" vertical={false} strokeOpacity={0.1} />
+                                            <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'oklch(var(--muted-foreground))', fontSize: 12 }} />
+                                            <YAxis allowDecimals={false} axisLine={false} tickLine={false} tick={{ fill: 'oklch(var(--muted-foreground))', fontSize: 12 }} />
+                                            <Tooltip
+                                                contentStyle={{ backgroundColor: 'oklch(var(--card))', borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                                                cursor={{ fill: 'oklch(var(--muted)/0.5)' }}
+                                            />
+                                            <Bar dataKey="value" fill="oklch(var(--primary))" radius={[4, 4, 0, 0]} name="Revenue ($)" />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        <Card className="col-span-1 border-border/50 shadow-xl shadow-primary/5">
+                            <CardHeader>
+                                <CardTitle>Events by Category</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div style={{ width: '100%', height: 300 }}>
+                                    <ResponsiveContainer width="100%" height={300}>
+                                        <PieChart>
+                                            <Pie
+                                                data={stats.eventsByCategory || []}
+                                                cx="50%"
+                                                cy="50%"
+                                                innerRadius={60}
+                                                outerRadius={80}
+                                                paddingAngle={5}
+                                                dataKey="value"
+                                                stroke="none"
+                                            >
+                                                {(stats.eventsByCategory || []).map((_: any, index: number) => (
+                                                    <Cell key={`cell-${index}`} fill={['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'][index % 5]} />
+                                                ))}
+                                            </Pie>
+                                            <Tooltip contentStyle={{ backgroundColor: 'oklch(var(--card))', borderRadius: '8px', border: 'none' }} />
+                                            <Legend iconType="circle" />
+                                        </PieChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </div>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {events.map((event) => (
-                    <Card key={event.id}>
-                        <CardHeader>
+                    <Card key={event.id} className="bg-card/50 backdrop-blur-sm border-border/50 hover:shadow-xl transition-all duration-300 group overflow-hidden relative">
+                        <CardHeader className="relative z-10">
                             <div className="flex justify-between items-start">
                                 <div>
-                                    <CardTitle>{event.title}</CardTitle>
-                                    <CardDescription>{event.category}</CardDescription>
+                                    <Badge variant="secondary" className="mb-2">{event.category}</Badge>
+                                    <CardTitle className="text-xl group-hover:text-primary transition-colors">{event.title}</CardTitle>
                                 </div>
-                                <Button variant="ghost" size="icon" onClick={() => openEditDialog(event)}>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-primary/10 hover:text-primary" onClick={() => openEditDialog(event)}>
                                     <Edit className="h-4 w-4" />
                                 </Button>
                             </div>
                         </CardHeader>
-                        <CardContent>
-                            <p className="text-sm text-slate-600 mb-4 line-clamp-2">{event.description}</p>
-                            <div className="space-y-2 text-sm">
-                                <div className="flex items-center text-slate-500">
-                                    <Calendar className="mr-2 h-4 w-4" />
-                                    {new Date(event.date).toLocaleDateString()}
+                        <CardContent className="relative z-10">
+                            <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{event.description}</p>
+                            <div className="space-y-2 text-sm text-balance">
+                                <div className="flex items-center text-muted-foreground">
+                                    <Calendar className="mr-2 h-4 w-4 text-primary/70" />
+                                    {new Date(event.date).toLocaleDateString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
                                 </div>
-                                <div className="flex items-center text-slate-500">
-                                    <MapPin className="mr-2 h-4 w-4" />
+                                <div className="flex items-center text-muted-foreground">
+                                    <MapPin className="mr-2 h-4 w-4 text-primary/70" />
                                     {event.location}
                                 </div>
                             </div>
                         </CardContent>
-                        <CardFooter className="flex justify-between border-t pt-4">
-                            <span className="text-sm font-medium">
+                        <CardFooter className="flex justify-between border-t border-border/50 pt-4 bg-muted/20 relative z-10">
+                            <span className="text-sm font-semibold text-primary">
                                 {event.ticketTypes?.reduce((acc, curr) => acc + curr.quantity, 0)} Seats
                             </span>
                             <div className="text-sm text-muted-foreground">
@@ -271,8 +382,9 @@ export function OrganizerDashboard() {
                 ))}
             </div>
             {events.length === 0 && (
-                <div className="text-center py-12 text-muted-foreground">
-                    You haven't created any events yet.
+                <div className="text-center py-20 bg-muted/30 rounded-3xl border border-border/50 border-dashed">
+                    <p className="text-muted-foreground mb-4 text-lg">You haven't created any events yet.</p>
+                    <Button onClick={openCreateDialog} variant="outline" className="border-primary/50 text-primary hover:bg-primary/5">Create Your First Event</Button>
                 </div>
             )}
         </div>

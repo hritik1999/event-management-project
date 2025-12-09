@@ -2,10 +2,74 @@ import { AppDataSource } from "../data-source"
 import { Event } from "../entities/Event"
 import { TicketType } from "../entities/TicketType"
 import { User } from "../entities/User"
+import { Booking } from "../entities/Booking"
 
 export class EventService {
     private eventRepository = AppDataSource.getRepository(Event)
     private ticketTypeRepository = AppDataSource.getRepository(TicketType)
+    private bookingRepository = AppDataSource.getRepository(Booking) // Added Booking repo
+
+    async getOrganizerStats(organizerId: string) {
+        const totalEvents = await this.eventRepository.count({ where: { organizer: { id: organizerId } } });
+
+        // Total Tickets Sold (Bookings for events by this organizer)
+        const totalTicketsSold = await this.bookingRepository
+            .createQueryBuilder("booking")
+            .leftJoin("booking.ticketType", "ticketType")
+            .leftJoin("ticketType.event", "event")
+            .where("event.organizerId = :organizerId", { organizerId })
+            .andWhere("booking.status = :status", { status: "CONFIRMED" })
+            .getCount();
+
+        // Total Revenue
+        const totalRevenueResult = await this.bookingRepository
+            .createQueryBuilder("booking")
+            .leftJoin("booking.ticketType", "ticketType")
+            .leftJoin("ticketType.event", "event")
+            .select("SUM(ticketType.price)", "total")
+            .where("event.organizerId = :organizerId", { organizerId })
+            .andWhere("booking.status = :status", { status: "CONFIRMED" })
+            .getRawOne();
+        const totalRevenue = parseFloat(totalRevenueResult?.total || "0");
+
+        // Recent Sales Trend (Last 6 months)
+        const recentBookings = await this.bookingRepository
+            .createQueryBuilder("booking")
+            .leftJoinAndSelect("booking.ticketType", "ticketType")
+            .leftJoin("ticketType.event", "event")
+            .where("event.organizerId = :organizerId", { organizerId })
+            .orderBy("booking.bookingDate", "DESC")
+            .take(100)
+            .getMany();
+
+        const salesByMonth: Record<string, number> = {};
+        recentBookings.forEach(booking => {
+            const month = new Date(booking.bookingDate).toLocaleString('default', { month: 'short' });
+            salesByMonth[month] = (salesByMonth[month] || 0) + booking.ticketType.price;
+        });
+
+        const revenueTrend = Object.keys(salesByMonth).map(name => ({
+            name,
+            value: salesByMonth[name]
+        }));
+
+        // Events by Category (for this organizer)
+        const eventsByCategory = await this.eventRepository
+            .createQueryBuilder("event")
+            .select("event.category", "name")
+            .addSelect("COUNT(event.id)", "value")
+            .where("event.organizerId = :organizerId", { organizerId })
+            .groupBy("event.category")
+            .getRawMany();
+
+        return {
+            totalEvents,
+            totalTicketsSold,
+            totalRevenue,
+            revenueTrend,
+            eventsByCategory: eventsByCategory.map(e => ({ name: e.name, value: parseInt(e.value) }))
+        };
+    }
 
     async createEvent(data: Partial<Event>, userId: string, ticketTypesData?: Partial<TicketType>[]) {
         const event = this.eventRepository.create({

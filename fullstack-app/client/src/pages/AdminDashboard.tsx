@@ -76,66 +76,31 @@ export function AdminDashboard() {
             {/* Stats Section */}
             {stats && (
                 <div className="space-y-8">
+                    {/* Stats Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                        <Card>
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-                                <Users className="h-4 w-4 text-muted-foreground" />
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-2xl font-bold">{stats.totalUsers}</div>
-                            </CardContent>
-                        </Card>
-                        <Card>
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Organizers</CardTitle>
-                                <Shield className="h-4 w-4 text-muted-foreground" />
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-2xl font-bold">{stats.totalOrganizers}</div>
-                            </CardContent>
-                        </Card>
-                        <Card>
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Attendees</CardTitle>
-                                <UserCheck className="h-4 w-4 text-muted-foreground" />
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-2xl font-bold">{stats.totalAttendees}</div>
-                            </CardContent>
-                        </Card>
-                        <Card>
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Total Events</CardTitle>
-                                <Calendar className="h-4 w-4 text-muted-foreground" />
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-2xl font-bold">{stats.totalEvents}</div>
-                            </CardContent>
-                        </Card>
-                        <Card>
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Total Bookings</CardTitle>
-                                <Ticket className="h-4 w-4 text-muted-foreground" />
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-2xl font-bold">{stats.totalBookings}</div>
-                            </CardContent>
-                        </Card>
-                        <Card>
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-                                <span className="text-muted-foreground font-bold text-green-600">$</span>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-2xl font-bold">${(stats.totalRevenue || 0).toFixed(2)}</div>
-                            </CardContent>
-                        </Card>
+                        {[
+                            { title: "Total Users", icon: Users, value: stats.totalUsers },
+                            { title: "Organizers", icon: Shield, value: stats.totalOrganizers },
+                            { title: "Attendees", icon: UserCheck, value: stats.totalAttendees },
+                            { title: "Total Events", icon: Calendar, value: stats.totalEvents },
+                            { title: "Total Bookings", icon: Ticket, value: stats.totalBookings },
+                            { title: "Total Revenue", icon: null, value: `$${(stats.totalRevenue || 0).toFixed(2)}`, isMoney: true }
+                        ].map((item, index) => (
+                            <Card key={index} className="bg-card/50 backdrop-blur-sm border-border/50 hover:shadow-lg transition-all duration-300">
+                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                    <CardTitle className="text-sm font-medium text-muted-foreground">{item.title}</CardTitle>
+                                    {item.icon ? <item.icon className="h-4 w-4 text-primary" /> : <span className="text-primary font-bold">$</span>}
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="text-2xl font-bold tracking-tight">{item.value}</div>
+                                </CardContent>
+                            </Card>
+                        ))}
                     </div>
 
                     {/* Charts Section */}
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        <Card className="col-span-1">
+                        <Card className="col-span-1 border-border/50 shadow-xl shadow-primary/5">
                             <CardHeader>
                                 <CardTitle>Bookings Trend</CardTitle>
                             </CardHeader>
@@ -143,18 +108,21 @@ export function AdminDashboard() {
                                 <div style={{ width: '100%', height: 300 }}>
                                     <ResponsiveContainer width="100%" height={300}>
                                         <BarChart data={stats.bookingsTrend || []}>
-                                            <CartesianGrid strokeDasharray="3 3" />
-                                            <XAxis dataKey="name" />
-                                            <YAxis allowDecimals={false} />
-                                            <Tooltip />
-                                            <Bar dataKey="bookings" fill="#8884d8" name="Bookings" />
+                                            <CartesianGrid strokeDasharray="3 3" vertical={false} strokeOpacity={0.1} />
+                                            <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'oklch(var(--muted-foreground))', fontSize: 12 }} />
+                                            <YAxis allowDecimals={false} axisLine={false} tickLine={false} tick={{ fill: 'oklch(var(--muted-foreground))', fontSize: 12 }} />
+                                            <Tooltip
+                                                contentStyle={{ backgroundColor: 'oklch(var(--card))', borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                                                cursor={{ fill: 'oklch(var(--muted)/0.5)' }}
+                                            />
+                                            <Bar dataKey="bookings" fill="oklch(var(--primary))" radius={[4, 4, 0, 0]} name="Bookings" />
                                         </BarChart>
                                     </ResponsiveContainer>
                                 </div>
                             </CardContent>
                         </Card>
 
-                        <Card className="col-span-1">
+                        <Card className="col-span-1 border-border/50 shadow-xl shadow-primary/5">
                             <CardHeader>
                                 <CardTitle>Events by Category</CardTitle>
                             </CardHeader>
@@ -166,37 +134,37 @@ export function AdminDashboard() {
                                                 data={stats.eventsByCategory || []}
                                                 cx="50%"
                                                 cy="50%"
-                                                labelLine={false}
+                                                innerRadius={60}
                                                 outerRadius={80}
-                                                fill="#8884d8"
+                                                paddingAngle={5}
                                                 dataKey="value"
-                                                label={({ name, percent }: { name?: string | number, percent?: number }) => `${name ?? 'Unknown'} ${((percent ?? 0) * 100).toFixed(0)}%`}
+                                                stroke="none"
                                             >
                                                 {(stats.eventsByCategory || []).map((_, index) => (
                                                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                                 ))}
                                             </Pie>
-                                            <Tooltip />
-                                            <Legend />
+                                            <Tooltip contentStyle={{ backgroundColor: 'oklch(var(--card))', borderRadius: '8px', border: 'none' }} />
+                                            <Legend iconType="circle" />
                                         </PieChart>
                                     </ResponsiveContainer>
                                 </div>
                             </CardContent>
                         </Card>
 
-                        <Card className="col-span-1">
+                        <Card className="col-span-1 border-border/50 shadow-xl shadow-primary/5">
                             <CardHeader>
                                 <CardTitle>Revenue by Organizer</CardTitle>
                             </CardHeader>
                             <CardContent>
                                 <div style={{ width: '100%', height: 300 }}>
                                     <ResponsiveContainer width="100%" height={300}>
-                                        <BarChart data={stats.revenueByOrganizer || []}>
-                                            <CartesianGrid strokeDasharray="3 3" />
-                                            <XAxis dataKey="name" />
-                                            <YAxis />
-                                            <Tooltip />
-                                            <Bar dataKey="value" fill="#82ca9d" name="Revenue ($)" />
+                                        <BarChart data={stats.revenueByOrganizer || []} layout="vertical">
+                                            <CartesianGrid strokeDasharray="3 3" horizontal={false} strokeOpacity={0.1} />
+                                            <XAxis type="number" axisLine={false} tickLine={false} tick={{ fill: 'oklch(var(--muted-foreground))', fontSize: 12 }} />
+                                            <YAxis dataKey="name" type="category" width={100} axisLine={false} tickLine={false} tick={{ fill: 'oklch(var(--muted-foreground))', fontSize: 12 }} />
+                                            <Tooltip contentStyle={{ backgroundColor: 'oklch(var(--card))', borderRadius: '8px', border: 'none' }} cursor={{ fill: 'oklch(var(--muted)/0.5)' }} />
+                                            <Bar dataKey="value" fill="oklch(var(--secondary-foreground))" radius={[0, 4, 4, 0]} name="Revenue ($)" barSize={20} />
                                         </BarChart>
                                     </ResponsiveContainer>
                                 </div>

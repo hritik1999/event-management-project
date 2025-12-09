@@ -36,6 +36,17 @@ class EventController {
             }
         });
     }
+    static getOrganizerStats(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const stats = yield eventService.getOrganizerStats(req.user.userId);
+                res.status(200).json(stats);
+            }
+            catch (error) {
+                res.status(500).json({ message: error.message });
+            }
+        });
+    }
     static getAllEvents(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             try {

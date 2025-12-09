@@ -112,157 +112,197 @@ export function EventDetailsPage() {
     if (!event) return <div className="text-center py-12">Loading...</div>;
 
     return (
-        <div className="container mx-auto py-8 px-4">
-            <Button variant="ghost" onClick={() => navigate(-1)} className="mb-4">
-                <ArrowLeft className="mr-2 h-4 w-4" /> Back
-            </Button>
+        <div className="min-h-screen bg-background relative">
+            {/* Hero Banner Background */}
+            <div className="absolute top-0 left-0 w-full h-[50vh] overflow-hidden -z-10">
+                {event.bannerImage ? (
+                    <>
+                        <img src={event.bannerImage} alt="" className="w-full h-full object-cover blur-sm opacity-50" />
+                        <div className="absolute inset-0 bg-gradient-to-b from-background/10 via-background/60 to-background" />
+                    </>
+                ) : (
+                    <div className="w-full h-full bg-gradient-to-b from-primary/20 to-background" />
+                )}
+            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div className="md:col-span-2 space-y-8">
-                    {/* Event Info */}
-                    <div className="space-y-6">
-                        <div className="aspect-video w-full bg-slate-200 rounded-lg overflow-hidden relative">
-                            <div className="absolute inset-0 flex items-center justify-center text-slate-400">
-                                No Image
-                            </div>
-                            {event.bannerImage && <img src={event.bannerImage} alt={event.title} className="absolute inset-0 w-full h-full object-cover" />}
-                        </div>
+            <div className="container mx-auto py-8 px-4 pt-32">
+                <Button variant="ghost" onClick={() => navigate(-1)} className="mb-8 hover:bg-background/20 text-foreground">
+                    <ArrowLeft className="mr-2 h-4 w-4" /> Back to Events
+                </Button>
 
-                        <div>
-                            <h1 className="text-3xl font-bold mb-2">{event.title}</h1>
-                            <div className="flex gap-4 text-slate-600 mb-4">
-                                <div className="flex items-center">
-                                    <Calendar className="mr-2 h-4 w-4" />
-                                    {new Date(event.date).toLocaleDateString()} at {new Date(event.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div className="lg:col-span-2 space-y-8">
+                        {/* Event Header */}
+                        <div className="space-y-4">
+                            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight drop-shadow-sm">{event.title}</h1>
+                            <div className="flex flex-wrap gap-6 text-lg text-muted-foreground">
+                                <div className="flex items-center bg-background/30 backdrop-blur-md px-4 py-2 rounded-full border border-white/10">
+                                    <Calendar className="mr-2 h-5 w-5 text-primary" />
+                                    {new Date(event.date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                                 </div>
-                                <div className="flex items-center">
-                                    <MapPin className="mr-2 h-4 w-4" />
+                                <div className="flex items-center bg-background/30 backdrop-blur-md px-4 py-2 rounded-full border border-white/10">
+                                    <MapPin className="mr-2 h-5 w-5 text-primary" />
                                     {event.location}
                                 </div>
                             </div>
-
-                            <div className="prose max-w-none">
-                                <h3 className="text-xl font-semibold mb-2">About this event</h3>
-                                <p className="whitespace-pre-wrap text-slate-700">{event.description}</p>
-                            </div>
                         </div>
-                    </div>
 
-                    {/* Reviews Section */}
-                    <div>
-                        <h3 className="text-2xl font-bold mb-4">Reviews</h3>
-
-                        {/* Review Form */}
-                        {user && user.role === "ATTENDEE" && (
-                            <Card className="mb-6">
-                                <CardHeader>
-                                    <CardTitle className="text-lg">Write a Review</CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <form onSubmit={handleSubmitReview} className="space-y-4">
-                                        <div className="space-y-2">
-                                            <Label>Rating</Label>
-                                            <div className="flex gap-2">
-                                                {[1, 2, 3, 4, 5].map((star) => (
-                                                    <Button
-                                                        key={star}
-                                                        type="button"
-                                                        variant={rating >= star ? "default" : "outline"}
-                                                        size="icon"
-                                                        className="h-8 w-8"
-                                                        onClick={() => setRating(star)}
-                                                    >
-                                                        <Star className={`h-4 w-4 ${rating >= star ? "fill-current" : ""}`} />
-                                                    </Button>
-                                                ))}
-                                            </div>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label htmlFor="comment">Comment</Label>
-                                            <Textarea
-                                                id="comment"
-                                                value={comment}
-                                                onChange={(e) => setComment(e.target.value)}
-                                                placeholder="Share your experience..."
-                                                required
-                                            />
-                                        </div>
-                                        <Button type="submit">Submit Review</Button>
-                                    </form>
-                                </CardContent>
-                            </Card>
-                        )}
-
-                        {/* Reviews List */}
-                        <div className="space-y-4">
-                            {reviews.length === 0 ? (
-                                <p className="text-slate-500 italic">No reviews yet.</p>
+                        {/* Banner Image (Main) */}
+                        <div className="aspect-video w-full rounded-2xl overflow-hidden shadow-2xl border border-white/10 relative group">
+                            {event.bannerImage ? (
+                                <img src={event.bannerImage} alt={event.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                             ) : (
-                                reviews.map((review) => (
-                                    <Card key={review.id}>
-                                        <CardContent className="pt-6">
-                                            <div className="flex justify-between items-start mb-2">
-                                                <div className="flex items-center gap-2 font-medium">
-                                                    <User className="h-4 w-4" />
-                                                    {review.user.username}
-                                                </div>
-                                                <div className="flex text-yellow-500">
-                                                    {Array.from({ length: review.rating }).map((_, i) => (
-                                                        <Star key={i} className="h-4 w-4 fill-current" />
+                                <div className="w-full h-full bg-muted flex items-center justify-center text-muted-foreground">
+                                    No Image Available
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Description */}
+                        <div className="prose prose-lg dark:prose-invert max-w-none">
+                            <h3 className="text-2xl font-bold mb-4 flex items-center gap-2">
+                                <span className="w-1 h-8 bg-primary rounded-full"></span>
+                                About this event
+                            </h3>
+                            <p className="whitespace-pre-wrap leading-relaxed text-muted-foreground">{event.description}</p>
+                        </div>
+
+                        {/* Reviews Section */}
+                        <div className="pt-8 border-t border-border/50">
+                            <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                                <Star className="text-yellow-500 fill-yellow-500 h-6 w-6" />
+                                Reviews
+                            </h3>
+
+                            {/* Review Form */}
+                            {user && user.role === "ATTENDEE" && (
+                                <Card className="mb-8 border-border/50 bg-card/50 backdrop-blur-sm">
+                                    <CardHeader>
+                                        <CardTitle className="text-lg">Share your experience</CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <form onSubmit={handleSubmitReview} className="space-y-4">
+                                            <div className="space-y-2">
+                                                <Label>Rating</Label>
+                                                <div className="flex gap-2">
+                                                    {[1, 2, 3, 4, 5].map((star) => (
+                                                        <Button
+                                                            key={star}
+                                                            type="button"
+                                                            variant={rating >= star ? "default" : "outline"}
+                                                            size="icon"
+                                                            className="h-10 w-10 transition-all hover:scale-110"
+                                                            onClick={() => setRating(star)}
+                                                        >
+                                                            <Star className={`h-5 w-5 ${rating >= star ? "fill-current" : ""}`} />
+                                                        </Button>
                                                     ))}
                                                 </div>
                                             </div>
-                                            <p className="text-slate-700">{review.comment}</p>
-                                            <div className="text-xs text-slate-400 mt-2">
-                                                {new Date(review.createdAt).toLocaleDateString()}
+                                            <div className="space-y-2">
+                                                <Label htmlFor="comment">Comment</Label>
+                                                <Textarea
+                                                    id="comment"
+                                                    value={comment}
+                                                    onChange={(e) => setComment(e.target.value)}
+                                                    placeholder="What did you like about the event?"
+                                                    className="bg-background/50"
+                                                    required
+                                                />
                                             </div>
-                                        </CardContent>
-                                    </Card>
-                                ))
+                                            <Button type="submit">Submit Review</Button>
+                                        </form>
+                                    </CardContent>
+                                </Card>
                             )}
+
+                            {/* Reviews List */}
+                            <div className="space-y-4">
+                                {reviews.length === 0 ? (
+                                    <p className="text-muted-foreground italic">No reviews yet. Be the first to review!</p>
+                                ) : (
+                                    reviews.map((review) => (
+                                        <Card key={review.id} className="border-border/50 bg-card/30">
+                                            <CardContent className="pt-6">
+                                                <div className="flex justify-between items-start mb-2">
+                                                    <div className="flex items-center gap-2 font-medium">
+                                                        <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary">
+                                                            <User className="h-4 w-4" />
+                                                        </div>
+                                                        {review.user.username}
+                                                    </div>
+                                                    <div className="flex text-yellow-500">
+                                                        {Array.from({ length: review.rating }).map((_, i) => (
+                                                            <Star key={i} className="h-4 w-4 fill-current" />
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                                <p className="text-muted-foreground mt-2">{review.comment}</p>
+                                                <div className="text-xs text-muted-foreground/50 mt-4">
+                                                    {new Date(review.createdAt).toLocaleDateString()}
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    ))
+                                )}
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div>
-                    <Card className="sticky top-20">
-                        <CardHeader>
-                            <CardTitle>Book Tickets</CardTitle>
-                            <CardDescription>Select a ticket type to reserve your spot.</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="space-y-2">
-                                <Label>Ticket Type</Label>
-                                <Select value={selectedTicket} onValueChange={setSelectedTicket}>
-                                    <SelectTrigger>
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {event.ticketTypes.map((ticket) => (
-                                            <SelectItem key={ticket.id} value={ticket.id}>
-                                                {ticket.name} - ${ticket.price}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            <div className="pt-4 border-t">
-                                <div className="flex justify-between mb-4 font-semibold">
-                                    <span>Total</span>
-                                    <span>
-                                        ${event.ticketTypes.find(t => t.id === selectedTicket)?.price || 0}
-                                    </span>
+                    {/* Booking Card */}
+                    <div className="lg:col-span-1">
+                        <Card className="sticky top-24 border-border/50 bg-card/80 backdrop-blur-xl shadow-2xl">
+                            <CardHeader>
+                                <CardTitle>Book Tickets</CardTitle>
+                                <CardDescription>Secure your spot now</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-6">
+                                <div className="space-y-2">
+                                    <Label>Select Ticket</Label>
+                                    <Select value={selectedTicket} onValueChange={setSelectedTicket}>
+                                        <SelectTrigger className="h-12 border-primary/20 bg-background/50">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {event.ticketTypes.map((ticket) => (
+                                                <SelectItem key={ticket.id} value={ticket.id}>
+                                                    <div className="flex justify-between w-full gap-4">
+                                                        <span>{ticket.name}</span>
+                                                        <span className="font-bold">${ticket.price}</span>
+                                                    </div>
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                 </div>
-                                <Button className="w-full" onClick={handleBooking} disabled={!selectedTicket}>
-                                    Book Now
-                                </Button>
-                            </div>
-                        </CardContent>
-                    </Card>
 
-                    <div className="mt-4 text-center text-sm text-slate-500">
-                        Event organized by {event.organizer.username}
+                                <div className="p-4 rounded-lg bg-muted/50 border border-border/50 space-y-2">
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-muted-foreground">Ticket Price</span>
+                                        <span>${event.ticketTypes.find(t => t.id === selectedTicket)?.price || 0}</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-muted-foreground">Fees</span>
+                                        <span>$0.00</span>
+                                    </div>
+                                    <div className="border-t border-border/50 my-2"></div>
+                                    <div className="flex justify-between font-bold text-lg">
+                                        <span>Total</span>
+                                        <span className="text-primary">
+                                            ${event.ticketTypes.find(t => t.id === selectedTicket)?.price || 0}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <Button className="w-full h-12 text-lg shadow-lg shadow-primary/20" onClick={handleBooking} disabled={!selectedTicket}>
+                                    Book Ticket
+                                </Button>
+
+                                <div className="text-center text-xs text-muted-foreground mt-4">
+                                    Event organized by <span className="font-medium text-foreground">{event.organizer.username}</span>
+                                </div>
+                            </CardContent>
+                        </Card>
                     </div>
                 </div>
             </div>

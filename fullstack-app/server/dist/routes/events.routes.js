@@ -5,6 +5,8 @@ const EventController_1 = require("../controllers/EventController");
 const auth_middleware_1 = require("../middlewares/auth.middleware");
 const User_1 = require("../entities/User");
 const router = (0, express_1.Router)();
+// Specific routes first
+router.get("/stats/organizer", auth_middleware_1.authenticate, (0, auth_middleware_1.authorize)([User_1.UserRole.ORGANIZER]), EventController_1.EventController.getOrganizerStats);
 router.get("/", EventController_1.EventController.getAllEvents);
 router.get("/:id", EventController_1.EventController.getEventById);
 router.post("/", auth_middleware_1.authenticate, (0, auth_middleware_1.authorize)([User_1.UserRole.ORGANIZER, User_1.UserRole.ADMIN]), EventController_1.EventController.createEvent);
