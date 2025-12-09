@@ -4,6 +4,7 @@ import helmet from "helmet"
 import authRoutes from "./routes/auth.routes"
 import eventRoutes from "./routes/events.routes"
 import bookingRoutes from "./routes/bookings.routes"
+import userRoutes from "./routes/users.routes"
 
 const app = express()
 
@@ -14,6 +15,7 @@ app.use(express.json())
 app.use("/api/auth", authRoutes)
 app.use("/api/events", eventRoutes)
 app.use("/api/bookings", bookingRoutes)
+app.use("/api/users", userRoutes)
 
 app.get("/", (req, res) => {
     res.send("Event Management API is running")

@@ -42,6 +42,10 @@ export class EventService {
             query.andWhere("(event.title ILIKE :search OR event.description ILIKE :search)", { search: `%${filters.search}%` })
         }
 
+        if (filters?.organizerId) {
+            query.andWhere("organizer.id = :organizerId", { organizerId: filters.organizerId })
+        }
+
         return await query.getMany()
     }
 

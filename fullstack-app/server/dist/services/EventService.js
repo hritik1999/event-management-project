@@ -43,6 +43,9 @@ class EventService {
             if (filters === null || filters === void 0 ? void 0 : filters.search) {
                 query.andWhere("(event.title ILIKE :search OR event.description ILIKE :search)", { search: `%${filters.search}%` });
             }
+            if (filters === null || filters === void 0 ? void 0 : filters.organizerId) {
+                query.andWhere("organizer.id = :organizerId", { organizerId: filters.organizerId });
+            }
             return yield query.getMany();
         });
     }
