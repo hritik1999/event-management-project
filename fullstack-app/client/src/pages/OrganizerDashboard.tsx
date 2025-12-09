@@ -9,7 +9,7 @@ import { Textarea } from "../components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { toast } from "sonner";
-import { Plus, Calendar, MapPin } from "lucide-react";
+import { Plus, Calendar, MapPin, Edit } from "lucide-react";
 
 interface TicketType {
     name: string;
@@ -31,7 +31,8 @@ interface Event {
 export function OrganizerDashboard() {
     const { user } = useAuth();
     const [events, setEvents] = useState<Event[]>([]);
-    const [isCreateOpen, setIsCreateOpen] = useState(false);
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [editingEventId, setEditingEventId] = useState<string | null>(null);
 
     // Form State
     const [formData, setFormData] = useState({
@@ -80,6 +81,44 @@ export function OrganizerDashboard() {
         setTicketTypes([...ticketTypes, { name: "VIP", price: 50, quantity: 20 }]);
     };
 
+    const resetForm = () => {
+        setFormData({
+            title: "",
+            description: "",
+            date: "",
+            time: "",
+            location: "",
+            category: "Tech",
+            bannerImage: ""
+        });
+        setTicketTypes([{ name: "General", price: 0, quantity: 100 }]);
+        setEditingEventId(null);
+    };
+
+    const openCreateDialog = () => {
+        resetForm();
+        setIsDialogOpen(true);
+    };
+
+    const openEditDialog = (event: Event) => {
+        const dateObj = new Date(event.date);
+        const dateStr = dateObj.toISOString().split("T")[0];
+        const timeStr = dateObj.toTimeString().split(" ")[0].substring(0, 5);
+
+        setFormData({
+            title: event.title,
+            description: event.description,
+            date: dateStr,
+            time: timeStr,
+            location: event.location,
+            category: event.category,
+            bannerImage: "" // Assuming we don't edit banner yet or it's separate
+        });
+        setTicketTypes(event.ticketTypes && event.ticketTypes.length > 0 ? event.ticketTypes : [{ name: "General", price: 0, quantity: 100 }]);
+        setEditingEventId(event.id);
+        setIsDialogOpen(true);
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
@@ -91,23 +130,19 @@ export function OrganizerDashboard() {
                 ticketTypes
             };
 
-            await api.post("/events", payload);
-            toast.success("Event created successfully");
-            setIsCreateOpen(false);
+            if (editingEventId) {
+                await api.put(`/events/${editingEventId}`, payload);
+                toast.success("Event updated successfully");
+            } else {
+                await api.post("/events", payload);
+                toast.success("Event created successfully");
+            }
+
+            setIsDialogOpen(false);
+            resetForm();
             fetchMyEvents();
-            // Reset form
-            setFormData({
-                title: "",
-                description: "",
-                date: "",
-                time: "",
-                location: "",
-                category: "Tech",
-                bannerImage: ""
-            });
-            setTicketTypes([{ name: "General", price: 0, quantity: 100 }]);
         } catch (error: any) {
-            toast.error(error.response?.data?.message || "Failed to create event");
+            toast.error(error.response?.data?.message || "Failed to save event");
         }
     };
 
@@ -116,13 +151,13 @@ export function OrganizerDashboard() {
             <div className="flex justify-between items-center mb-8">
                 <h1 className="text-3xl font-bold">Organizer Dashboard</h1>
 
-                <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                     <DialogTrigger asChild>
-                        <Button><Plus className="mr-2 h-4 w-4" /> Create Event</Button>
+                        <Button onClick={openCreateDialog}><Plus className="mr-2 h-4 w-4" /> Create Event</Button>
                     </DialogTrigger>
                     <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                         <DialogHeader>
-                            <DialogTitle>Create New Event</DialogTitle>
+                            <DialogTitle>{editingEventId ? "Edit Event" : "Create New Event"}</DialogTitle>
                         </DialogHeader>
                         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
                             <div className="grid grid-cols-2 gap-4">
@@ -132,7 +167,7 @@ export function OrganizerDashboard() {
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="category">Category</Label>
-                                    <Select onValueChange={handleSelectChange} defaultValue={formData.category}>
+                                    <Select onValueChange={handleSelectChange} defaultValue={formData.category} value={formData.category}>
                                         <SelectTrigger>
                                             <SelectValue placeholder="Category" />
                                         </SelectTrigger>
@@ -191,7 +226,7 @@ export function OrganizerDashboard() {
                                 ))}
                             </div>
 
-                            <Button type="submit" className="w-full">Create Event</Button>
+                            <Button type="submit" className="w-full">{editingEventId ? "Update Event" : "Create Event"}</Button>
                         </form>
                     </DialogContent>
                 </Dialog>
@@ -201,8 +236,15 @@ export function OrganizerDashboard() {
                 {events.map((event) => (
                     <Card key={event.id}>
                         <CardHeader>
-                            <CardTitle>{event.title}</CardTitle>
-                            <CardDescription>{event.category}</CardDescription>
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <CardTitle>{event.title}</CardTitle>
+                                    <CardDescription>{event.category}</CardDescription>
+                                </div>
+                                <Button variant="ghost" size="icon" onClick={() => openEditDialog(event)}>
+                                    <Edit className="h-4 w-4" />
+                                </Button>
+                            </div>
                         </CardHeader>
                         <CardContent>
                             <p className="text-sm text-slate-600 mb-4 line-clamp-2">{event.description}</p>

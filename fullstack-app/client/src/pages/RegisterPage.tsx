@@ -83,7 +83,7 @@ export function RegisterPage() {
                                 <SelectContent>
                                     <SelectItem value="ATTENDEE">Attendee</SelectItem>
                                     <SelectItem value="ORGANIZER">Event Organizer</SelectItem>
-                                    <SelectItem value="ADMIN">Admin</SelectItem>
+
                                 </SelectContent>
                             </Select>
                         </div>
