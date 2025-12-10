@@ -152,6 +152,41 @@ export function OrganizerDashboard() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        // Validation
+        if (!formData.title || !formData.description || !formData.date || !formData.time || !formData.location || !formData.category) {
+            toast.error("Please fill in all required fields.");
+            return;
+        }
+
+        const currentDateTime = new Date();
+        const selectedDateTime = new Date(`${formData.date}T${formData.time}`);
+
+        if (selectedDateTime <= currentDateTime) {
+            toast.error("Event date and time must be in the future.");
+            return;
+        }
+
+        if (ticketTypes.length === 0) {
+            toast.error("Please add at least one ticket type.");
+            return;
+        }
+
+        for (const ticket of ticketTypes) {
+            if (!ticket.name) {
+                toast.error("All ticket types must have a name.");
+                return;
+            }
+            if (ticket.price < 0) {
+                toast.error(`Price for ticket '${ticket.name}' cannot be negative.`);
+                return;
+            }
+            if (ticket.quantity <= 0) {
+                toast.error(`Quantity for ticket '${ticket.name}' must be greater than zero.`);
+                return;
+            }
+        }
+
         try {
             const dateTime = new Date(`${formData.date}T${formData.time}`);
 
