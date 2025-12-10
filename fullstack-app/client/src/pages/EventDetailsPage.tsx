@@ -3,6 +3,14 @@ import { useParams, useNavigate } from "react-router-dom";
 import api from "../lib/api";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../components/ui/card";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "../components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { Label } from "../components/ui/label";
 import { Textarea } from "../components/ui/textarea";
@@ -42,6 +50,7 @@ export function EventDetailsPage() {
     const { user } = useAuth();
     const [event, setEvent] = useState<Event | null>(null);
     const [selectedTicket, setSelectedTicket] = useState<string>("");
+    const [isBookingDialogOpen, setIsBookingDialogOpen] = useState(false);
 
     // Reviews State
     const [reviews, setReviews] = useState<Review[]>([]);
@@ -76,15 +85,20 @@ export function EventDetailsPage() {
         fetchReviews();
     }, [id, navigate]);
 
-    const handleBooking = async () => {
+    const handleBooking = () => {
         if (!user) {
             toast.error("Please login to book tickets");
             navigate("/login");
             return;
         }
 
+        setIsBookingDialogOpen(true);
+    };
+
+    const confirmBooking = async () => {
         try {
             await api.post("/bookings", { ticketTypeId: selectedTicket });
+            setIsBookingDialogOpen(false);
             toast.success("Booking confirmed!");
             navigate("/my-bookings");
         } catch (error: any) {
@@ -306,6 +320,39 @@ export function EventDetailsPage() {
                     </div>
                 </div>
             </div>
+
+            <Dialog open={isBookingDialogOpen} onOpenChange={setIsBookingDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Confirm Booking</DialogTitle>
+                        <DialogDescription>
+                            Please review your booking details before proceeding via payment.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4 space-y-4">
+                        <div className="flex justify-between items-center">
+                            <span className="font-medium text-muted-foreground">Event</span>
+                            <span className="font-semibold">{event.title}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                            <span className="font-medium text-muted-foreground">Ticket Type</span>
+                            <span>{event.ticketTypes.find(t => t.id === selectedTicket)?.name}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-lg pt-4 border-t border-border">
+                            <span className="font-bold">Total Amount</span>
+                            <span className="font-bold text-primary text-xl">
+                                ${event.ticketTypes.find(t => t.id === selectedTicket)?.price}
+                            </span>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsBookingDialogOpen(false)}>Cancel</Button>
+                        <Button onClick={confirmBooking} className="w-full sm:w-auto">
+                            Pay & Confirm
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
